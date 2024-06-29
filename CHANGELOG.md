@@ -7,7 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Nothing yet!
+- Add support for `prettier-plugin-multiline-arrays` ([#299](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/299))
+- Add resolution cache for known plugins ([#301](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/301))
+
+## [0.6.5] - 2024-06-17
+
+- Only re-apply string escaping when necessary ([#295](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/295))
+
+## [0.6.4] - 2024-06-12
+
+- Export `PluginOptions` type ([#292](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/292))
+
+## [0.6.3] - 2024-06-11
+
+- Improve detection of string concatenation ([#288](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/288))
 
 ## [0.6.2] - 2024-06-07
 
@@ -310,7 +323,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix error when using nullish coalescing operator in Vue/Angular ([#2](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/2))
 
-[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.6.2...HEAD
+[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.6.5...HEAD
+[0.6.5]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.6.4...v0.6.5
+[0.6.4]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.6.3...v0.6.4
+[0.6.3]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.6.2...v0.6.3
 [0.6.2]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.14...v0.6.0

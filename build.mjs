@@ -1,6 +1,6 @@
-import fs from 'fs'
-import path from 'path'
-import { fileURLToPath } from 'url'
+import * as fs from 'node:fs'
+import * as path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import esbuild from 'esbuild'
 
 /**
@@ -44,12 +44,12 @@ function patchCjsInterop() {
 
         // Prepend `createRequire`
         let code = [
-          `import {createRequire} from 'module'`,
+          `import {createRequire as __global__createRequire__} from 'module'`,
           `import {dirname as __global__dirname__} from 'path'`,
           `import {fileURLToPath} from 'url'`,
 
           // CJS interop fixes
-          `const require=createRequire(import.meta.url)`,
+          `const require=__global__createRequire__(import.meta.url)`,
           `const __filename=fileURLToPath(import.meta.url)`,
           `const __dirname=__global__dirname__(__filename)`,
         ]
@@ -58,23 +58,6 @@ function patchCjsInterop() {
 
         fs.promises.writeFile(outfile, content)
       })
-    },
-  }
-}
-
-/**
- * @returns {import('esbuild').Plugin}
- */
-function copyTypes() {
-  return {
-    name: 'copy-types',
-    setup(build) {
-      build.onEnd(() =>
-        fs.promises.copyFile(
-          path.resolve(__dirname, './src/index.d.ts'),
-          path.resolve(__dirname, './dist/index.d.ts'),
-        ),
-      )
     },
   }
 }
@@ -90,7 +73,7 @@ let context = await esbuild.context({
   entryPoints: [path.resolve(__dirname, './src/index.js')],
   outfile: path.resolve(__dirname, './dist/index.mjs'),
   format: 'esm',
-  plugins: [patchRecast(), patchCjsInterop(), copyTypes()],
+  plugins: [patchRecast(), patchCjsInterop()],
 })
 
 await context.rebuild()

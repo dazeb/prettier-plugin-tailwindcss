@@ -1,15 +1,19 @@
 // Given a version, figure out what the release notes are so that we can use this to pre-fill the
 // relase notes on a GitHub release for the current version.
 
-let path = require('path')
-let fs = require('fs')
+import * as fs from 'node:fs/promises'
+import * as path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-let version =
-  process.argv[2] ||
-  process.env.npm_package_version ||
-  require('../package.json').version
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-let changelog = fs.readFileSync(
+const pkg = JSON.parse(
+  await fs.readFile(path.resolve(__dirname, '../package.json'), 'utf8'),
+)
+
+let version = process.argv[2] || process.env.npm_package_version || pkg.version
+
+let changelog = await fs.readFile(
   path.resolve(__dirname, '..', 'CHANGELOG.md'),
   'utf8',
 )

@@ -1,6 +1,8 @@
-const { t, yes, no, format } = require('./utils')
+import { describe, test } from 'vitest'
+import type { TestEntry } from './utils.js'
+import { format, no, t, yes } from './utils.js'
 
-let html = [
+let html: TestEntry[] = [
   t`<div class="${yes}"></div>`,
   t`<!-- <div class="${no}"></div> -->`,
   t`<div class="${no} {{ 'p-0 sm:p-0 m-0' }}"></div>`,
@@ -25,7 +27,7 @@ let html = [
   ],
 ]
 
-let css = [
+let css: TestEntry[] = [
   t`@apply ${yes};`,
   t`/* @apply ${no}; */`,
   t`@not-apply ${no};`,
@@ -36,7 +38,7 @@ let css = [
   ],
 ]
 
-let javascript = [
+let javascript: TestEntry[] = [
   t`;<div class="${yes}" />`,
   t`;<div ns:class="${no}" />`,
   t`/* <div class="${no}" /> */`,
@@ -93,14 +95,14 @@ let javascript = [
     ';<div class={`flex ` + `  ` + `text-red-500`} />',
     ';<div class={`flex ` + ` ` + `text-red-500`} />',
   ],
-  [
-    `;<div class={"before:content-['\\\\2248']"} />`,
-    `;<div class={"before:content-['\\\\2248']"} />`,
-  ],
+
+  t`;<div class={"before:content-['\\\\2248']"} />`,
+  t`;<div class={\`before:content-['\\\\2248']\`} />`,
+  t`;<div class="before:content-['\\\\2248']" />`,
 
   [
-    `;<div class={\`before:content-['\\\\2248']\`} />`,
-    `;<div class={\`before:content-['\\\\2248']\`} />`,
+    `;<div class={'object-cover' + (standalone ? ' aspect-square w-full' : ' min-h-0 grow basis-0')}></div>`,
+    `;<div class={'object-cover' + (standalone ? ' aspect-square w-full' : ' min-h-0 grow basis-0')}></div>`,
   ],
 ]
 javascript = javascript.concat(
@@ -111,7 +113,7 @@ javascript = javascript.concat(
   ]),
 )
 
-let vue = [
+let vue: TestEntry[] = [
   ...html,
   t`<div :class="'${yes}'"></div>`,
   t`<!-- <div :class="'${no}'"></div> -->`,
@@ -157,7 +159,7 @@ let vue = [
   ],
 ]
 
-let glimmer = [
+let glimmer: TestEntry[] = [
   t`<div class='${yes}'></div>`,
   t`<!-- <div class='${no}'></div> -->`,
   t`<div class='${yes} {{"${yes}"}}'></div>`,
@@ -199,7 +201,7 @@ let glimmer = [
   ],
 ]
 
-let tests = {
+let tests: Record<string, TestEntry[]> = {
   html,
   glimmer,
   lwc: html,
@@ -264,7 +266,7 @@ let tests = {
 
 describe('parsers', () => {
   for (let parser in tests) {
-    test(parser, async () => {
+    test(parser, async ({ expect }) => {
       for (let [input, expected, options] of tests[parser]) {
         expect(await format(input, { ...options, parser })).toEqual(expected)
       }
@@ -273,13 +275,13 @@ describe('parsers', () => {
 })
 
 describe('other', () => {
-  test('non-tailwind classes', async () => {
+  test('non-tailwind classes', async ({ expect }) => {
     expect(
       await format('<div class="sm:lowercase uppercase potato text-sm"></div>'),
     ).toEqual('<div class="potato text-sm uppercase sm:lowercase"></div>')
   })
 
-  test('parasite utilities', async () => {
+  test('parasite utilities', async ({ expect }) => {
     expect(
       await format(
         '<div class="group peer unknown-class p-0 container"></div>',
@@ -289,12 +291,14 @@ describe('other', () => {
 })
 
 describe('whitespace', () => {
-  test('class lists containing interpolation are ignored', async () => {
+  test('class lists containing interpolation are ignored', async ({
+    expect,
+  }) => {
     let result = await format('<div class="{{ this is ignored }}"></div>')
     expect(result).toEqual('<div class="{{ this is ignored }}"></div>')
   })
 
-  test('whitespace can be preserved around classes', async () => {
+  test('whitespace can be preserved around classes', async ({ expect }) => {
     let result = await format(
       `;<div className={' underline text-red-500  flex '}></div>`,
       {
@@ -307,14 +311,16 @@ describe('whitespace', () => {
     )
   })
 
-  test('whitespace can be collapsed around classes', async () => {
+  test('whitespace can be collapsed around classes', async ({ expect }) => {
     let result = await format(
       '<div class=" underline text-red-500  flex "></div>',
     )
     expect(result).toEqual('<div class="flex text-red-500 underline"></div>')
   })
 
-  test('whitespace is collapsed but not trimmed when ignored', async () => {
+  test('whitespace is collapsed but not trimmed when ignored', async ({
+    expect,
+  }) => {
     let result = await format(
       ';<div className={`underline text-red-500 ${foo}-bar flex`}></div>',
       {
@@ -326,7 +332,7 @@ describe('whitespace', () => {
     )
   })
 
-  test('duplicate classes are dropped', async () => {
+  test('duplicate classes are dropped', async ({ expect }) => {
     let result = await format(
       '<div class="underline line-through underline flex"></div>',
     )

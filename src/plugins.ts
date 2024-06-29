@@ -1,4 +1,5 @@
-import { createRequire as req } from 'module'
+import type { Parser, ParserOptions, Plugin, Printer } from 'prettier'
+import './types'
 import * as prettierParserAcorn from 'prettier/plugins/acorn'
 import * as prettierParserBabel from 'prettier/plugins/babel'
 import * as prettierParserFlow from 'prettier/plugins/flow'
@@ -7,28 +8,22 @@ import * as prettierParserHTML from 'prettier/plugins/html'
 import * as prettierParserMeriyah from 'prettier/plugins/meriyah'
 import * as prettierParserPostCSS from 'prettier/plugins/postcss'
 import * as prettierParserTypescript from 'prettier/plugins/typescript'
+import { loadIfExists, maybeResolve } from './resolve'
 
-/**
- * @typedef {object} PluginDetails
- * @property {Record<string, import('prettier').Parser<any>>} parsers
- * @property {Record<string, import('prettier').Printer<any>>} printers
- */
+interface PluginDetails {
+  parsers: Record<string, Parser<any>>
+  printers: Record<string, Printer<any>>
+}
 
-/**
- * @returns {Promise<import('prettier').Plugin<any>>}
- */
-async function loadIfExistsESM(name) {
-  try {
-    if (createRequire(import.meta.url).resolve(name)) {
-      let mod = await import(name)
-      return mod.default ?? mod
-    }
-  } catch (e) {
-    return {
-      parsers: {},
-      printers: {},
-    }
+async function loadIfExistsESM(name: string): Promise<Plugin<any>> {
+  let mod = await loadIfExists<Plugin<any>>(name)
+
+  mod ??= {
+    parsers: {},
+    printers: {},
   }
+
+  return mod
 }
 
 export async function loadPlugins() {
@@ -46,18 +41,22 @@ export async function loadPlugins() {
     ...thirdparty.printers,
   }
 
-  function maybeResolve(name) {
-    try {
-      return req.resolve(name)
-    } catch (err) {
-      return null
-    }
-  }
-
-  function findEnabledPlugin(options, name, mod) {
+  function findEnabledPlugin(
+    options: ParserOptions<any>,
+    name: string,
+    mod: any,
+  ) {
     let path = maybeResolve(name)
 
     for (let plugin of options.plugins) {
+      if (typeof plugin === 'string') {
+        if (plugin === name || plugin === path) {
+          return mod
+        }
+
+        continue
+      }
+
       // options.plugins.*.name == name
       if (plugin.name === name) {
         return mod
@@ -82,7 +81,7 @@ export async function loadPlugins() {
     parsers,
     printers,
 
-    originalParser(format, options) {
+    originalParser(format: string, options: ParserOptions) {
       if (!options.plugins) {
         return parsers[format]
       }
@@ -102,11 +101,7 @@ export async function loadPlugins() {
   }
 }
 
-/**
- *
- * @returns {Promise<PluginDetails}>}
- */
-async function loadBuiltinPlugins() {
+async function loadBuiltinPlugins(): Promise<PluginDetails> {
   return {
     parsers: {
       html: prettierParserHTML.parsers.html,
@@ -132,10 +127,7 @@ async function loadBuiltinPlugins() {
   }
 }
 
-/**
- * @returns {Promise<PluginDetails}>}
- */
-async function loadThirdPartyPlugins() {
+async function loadThirdPartyPlugins(): Promise<PluginDetails> {
   // Commented out plugins do not currently work with Prettier v3.0
   let [astro, liquid, marko, melody, pug, svelte] = await Promise.all([
     loadIfExistsESM('prettier-plugin-astro'),
@@ -169,6 +161,7 @@ async function loadCompatiblePlugins() {
     'prettier-plugin-css-order',
     'prettier-plugin-import-sort',
     'prettier-plugin-jsdoc',
+    'prettier-plugin-multiline-arrays',
     'prettier-plugin-organize-attributes',
     'prettier-plugin-style-order',
     'prettier-plugin-sort-imports',
